@@ -2,7 +2,8 @@ name: Save output.csv to repo
 
 on:
   push:
-    branches: [main]
+    branches: [main]  # or your branch name
+  workflow_dispatch:
 
 jobs:
   save-output:
@@ -12,7 +13,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          persist-credentials: false  # Important: allows custom git commands
+          persist-credentials: true  # ✅ enables pushing with GITHUB_TOKEN
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -28,8 +29,10 @@ jobs:
 
       - name: Commit and push output.csv
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
           git add Output/output.csv
-          git commit -m "Add generated output.csv"
-          git push origin main
+
+          # Only commit if the file changed
+          git diff --cached --quiet || git commit -m "Update output.csv [skip ci]"
+          git push
